@@ -13,10 +13,10 @@ import csv
 
 class SpellChecker():
 
-    def __init__(self,text=""):
+    def __init__(self):
         self.tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
         self.dictionary=nltk.FreqDist()
-        self.add_words(text)
+        self.bigrams=nltk.FreqDist()
         self.letters = 'abcdefghijklmnñopqrstuvwxyz'
         
     def add_words(self,text):
@@ -29,7 +29,7 @@ class SpellChecker():
             self.dictionary[k]+=v
             
     def probability(self,word):
-        return self.dictionary[word]/self.dictionary.B() if self.dictionary else 0
+        return self.dictionary[word]/self.dictionary.B()
     
     def known(self,words):
         return set(w for w in words if w in self.dictionary)
@@ -61,7 +61,12 @@ class SpellChecker():
                 or [word]
 
                 
-    
+    def add_bigrams(self,text):
+        words=[word for word in self.tokenizer.tokenize(text)]
+        longitud=len(words)-1
+        for i in range(0,longitud):
+            self.bigrams[(words[i].lower(),words[i+1].lower()) ] += 1
+
     
     def correct(self,word):
         return max(self.candidates(word),key=self.probability)
@@ -71,20 +76,17 @@ class SpellChecker():
         return " ".join(self.correct(w) for w in sentence.split(" "))
     
 
-    
 if __name__=="__main__":
     
     sp=SpellChecker()
     print("Opening file...")
-    with open('CREA_total.txt') as csvfile:
-        dictionary = csv.DictReader(csvfile, delimiter='\t')
-        w=dictionary.fieldnames[1]
-        f=dictionary.fieldnames[2]
-        
-        
-        
-        sp.add_words_count({row[w] :int(row[f].replace(",","")) for row in dictionary })
-        print(sp.dictionary.most_common(25))    
+#    with open('CREA_total.txt') as csvfile:
+#        dictionary = csv.DictReader(csvfile, delimiter='\t')
+#        w=dictionary.fieldnames[1]
+#        f=dictionary.fieldnames[2]
+#        
+#        sp.add_words_count({row[w] :int(row[f].replace(",","")) for row in dictionary })
+#        print(sp.dictionary.most_common(25))    
         
         
     with open('text.txt',encoding="utf8") as csvfile:
@@ -93,8 +95,9 @@ if __name__=="__main__":
         next(csvfile,None)
 
         for r in csvfile:
-            sp.add_words(r)
-
+            line=r[r.find(" "):]
+            sp.add_words(line)
+            sp.add_bigrams(line)
         print(sp.dictionary.most_common(25))    
         
         
